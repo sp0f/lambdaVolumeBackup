@@ -11,7 +11,7 @@ for volume in ec2.volumes.filter(Filters=[{'Name': 'tag:lambdaVolumeBackup', 'Va
         for snapshot in volume_snapshots:
             if snapshot.description.startswith('lambdaVolumeBackup-'):
                 snapshotCount=snapshotCount+1
-                print snapshot.id+"("+str(snapshotCount)+")"
+                #print snapshot.id+"("+str(snapshotCount)+")"
         if snapshotCount < retention_days:
                     volume_list.append(volume.id+"("+str(snapshotCount)+")")
 
