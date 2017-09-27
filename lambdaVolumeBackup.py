@@ -5,7 +5,7 @@ import datetime
 import pytz
 
 ec2 = boto3.resource('ec2')
-retention_days = 8
+retention_days = 2
 
 instances = ec2.instances.filter(Filters=[
     {
@@ -28,8 +28,17 @@ for instance in instances:
                     # create snapshot
 
                     snapshot=volume.create_snapshot(volume.volume_id, Description=description)
+
                     if snapshot:
                         print "Snapshot: "+str(snapshot.id)+" created sucessfully"
+                        snapshot.create_tags(
+                            Tags=[
+                                {
+                                    'Key': 'archive',
+                                    'Value': 'true'
+                                }
+                            ]
+                        )
 
                     # retention
                     for snapshot in volume.snapshots.all():
@@ -40,6 +49,7 @@ for instance in instances:
                                 + str(datetime.timedelta(days=retention_days)) + " = " \
                                 + str((datetime.datetime.now().replace(tzinfo=None) - snapshot.start_time.replace(tzinfo=None)) > datetime.timedelta(days=retention_days))
                         '''
+
                         if snapshot.description.startswith('lambdaVolumeBackup-'):
                             if (datetime.datetime.now().replace(tzinfo=None) - snapshot.start_time.replace(tzinfo=None)) > datetime.timedelta(days=retention_days):
                                 print("\t\tDeleting snapshot [%s - %s]" % (snapshot.id, snapshot.description))
